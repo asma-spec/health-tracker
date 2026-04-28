@@ -29,6 +29,10 @@ jobs:
 
       - name: Build application
         run: npm run build
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@master
