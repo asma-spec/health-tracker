@@ -15,9 +15,33 @@ interface DailyData {
   createdAt?: string;
 }
 
+interface Profile {
+  targetWeight?: number;
+  sleep?: number;
+  activity?: number;
+  profileCompleted?: boolean;
+}
+
+interface ObjectiveCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+}
+
+interface HistoryCardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+}
+
+interface StatCardProps {
+  title: string;
+  value: string;
+}
+
 export default function HistoryPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [history, setHistory] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +50,6 @@ export default function HistoryPage() {
     return localStorage.getItem("token");
   }
 
-  // Calcul pourcentage proche de l'objectif
   const calculateProximity = (current: number, target: number) => {
     if (!current || !target) return 0;
     if (current <= target) return (current / target) * 100;
@@ -58,34 +81,30 @@ export default function HistoryPage() {
         setLoading(false);
       }
     }
-
     fetchData();
-  }, []);
+  }, [router]);
 
   if (loading) return <p className="text-center text-gray-500 p-10">Chargement...</p>;
 
-  // Dernière entrée pour calculer les stats
   const latestEntry = history.length > 0 ? history[0] : null;
-  const weightProximity = latestEntry && profile.targetWeight ? calculateProximity(Number(latestEntry.weight), profile.targetWeight) : null;
-  const sleepProximity = latestEntry && profile.sleep ? calculateProximity(Number(latestEntry.sleep), profile.sleep) : null;
-  const activityProximity = latestEntry && profile.activity ? calculateProximity(Number(latestEntry.activity), profile.activity) : null;
+  const weightProximity = latestEntry && profile?.targetWeight ? calculateProximity(Number(latestEntry.weight), profile.targetWeight) : null;
+  const sleepProximity = latestEntry && profile?.sleep ? calculateProximity(Number(latestEntry.sleep), profile.sleep) : null;
+  const activityProximity = latestEntry && profile?.activity ? calculateProximity(Number(latestEntry.activity), profile.activity) : null;
 
   return (
     <div className="p-6 min-h-screen bg-gradient-to-b from-green-50 via-green-100 to-green-50 space-y-10">
-      {/* Objectifs */}
       <section>
         <h2 className="text-2xl font-bold mb-4 text-green-800">Objectifs</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ObjectiveCard title="Poids cible" value={profile.targetWeight ? `${profile.targetWeight} kg` : "—"} icon={<Scale size={28} />} />
-          <ObjectiveCard title="Sommeil cible" value={profile.sleep ? `${profile.sleep} h` : "—"} icon={<Moon size={28} />} />
-          <ObjectiveCard title="Activité cible" value={profile.activity ? `${profile.activity} min` : "—"} icon={<Activity size={28} />} />
+          <ObjectiveCard title="Poids cible" value={profile?.targetWeight ? `${profile.targetWeight} kg` : "—"} icon={<Scale size={28} />} />
+          <ObjectiveCard title="Sommeil cible" value={profile?.sleep ? `${profile.sleep} h` : "—"} icon={<Moon size={28} />} />
+          <ObjectiveCard title="Activité cible" value={profile?.activity ? `${profile.activity} min` : "—"} icon={<Activity size={28} />} />
         </div>
       </section>
 
-      {/* Dernières statistiques */}
       {latestEntry && (
         <section>
-          <h2 className="text-2xl font-bold mb-4 text-green-800">Statistiques par rapport à l'objectif (dernière entrée)</h2>
+          <h2 className="text-2xl font-bold mb-4 text-green-800">Statistiques par rapport à l&apos;objectif (dernière entrée)</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <StatCard title="Poids" value={weightProximity ? `${weightProximity.toFixed(1)} %` : "—"} />
             <StatCard title="Sommeil" value={sleepProximity ? `${sleepProximity.toFixed(1)} %` : "—"} />
@@ -94,7 +113,6 @@ export default function HistoryPage() {
         </section>
       )}
 
-      {/* Historique des entrées quotidiennes */}
       <section>
         <h2 className="text-2xl font-bold mb-4 text-green-800">Historique quotidien</h2>
         {history.length === 0 ? (
@@ -129,7 +147,7 @@ export default function HistoryPage() {
   );
 }
 
-function ObjectiveCard({ title, value, icon }: any) {
+function ObjectiveCard({ title, value, icon }: ObjectiveCardProps) {
   return (
     <div className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4 border-l-4 border-green-500">
       <div className="text-green-600">{icon}</div>
@@ -141,7 +159,7 @@ function ObjectiveCard({ title, value, icon }: any) {
   );
 }
 
-function HistoryCard({ title, value, icon }: any) {
+function HistoryCard({ title, value, icon }: HistoryCardProps) {
   return (
     <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg">
       <div className="text-green-600">{icon}</div>
@@ -153,11 +171,8 @@ function HistoryCard({ title, value, icon }: any) {
   );
 }
 
-function StatCard({ title, value }: any) {
-  // Extraire le pourcentage numérique pour la barre
+function StatCard({ title, value }: StatCardProps) {
   const numericValue = Number(value?.replace("%", "")) || 0;
-
-  // Définir la couleur selon le pourcentage
   let barColor = "bg-red-500";
   if (numericValue >= 90) barColor = "bg-green-500";
   else if (numericValue >= 70) barColor = "bg-yellow-400";
@@ -169,12 +184,8 @@ function StatCard({ title, value }: any) {
         <p className="text-lg font-bold text-green-700">{value}</p>
       </div>
       <div className="w-full bg-gray-200 h-3 rounded-full">
-        <div
-          className={`${barColor} h-3 rounded-full`}
-          style={{ width: `${Math.min(numericValue, 100)}%` }}
-        />
+        <div className={`${barColor} h-3 rounded-full`} style={{ width: `${Math.min(numericValue, 100)}%` }} />
       </div>
     </div>
   );
 }
-

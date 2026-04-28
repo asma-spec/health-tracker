@@ -9,6 +9,7 @@ async function getUserFromToken(req: Request) {
 
   const token = auth.split(" ")[1];
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
     return decoded.userId;
   } catch {
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       bmi = parseFloat((weight / (heightInMeters ** 2)).toFixed(1));
 
       if (body.age) {
-        const age = Number(body.age);
+        const _age = Number(body.age);
         if (bmi < 18.5) bmiMessage = "Votre BMI est faible pour votre âge. Vous êtes mince.";
         else if (bmi >= 18.5 && bmi < 25) bmiMessage = "Votre BMI est harmonique pour votre âge. Poids normal.";
         else if (bmi >= 25 && bmi < 30) bmiMessage = "Votre BMI est élevé pour votre âge. Surpoids.";

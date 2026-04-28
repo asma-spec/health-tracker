@@ -38,6 +38,7 @@ Réponds en français, clair et complet.
     const response = completion?.choices?.[0]?.message?.content || "";
 
     return NextResponse.json({ success: true, analysis: response });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     console.error("❌ AI Error:", err);
     return NextResponse.json({ success: false, error: err?.message || "Erreur interne du serveur." }, { status: 500 });

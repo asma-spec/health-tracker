@@ -26,9 +26,35 @@ interface Notification {
   type: "alerte" | "encouragement";
 }
 
+interface Profile {
+  targetWeight?: number;
+  sleep?: number;
+  activity?: number;
+  profileCompleted?: boolean;
+}
+
+interface CardProps {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+}
+
+interface InputCardProps {
+  title: string;
+  name: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  icon: React.ReactNode;
+}
+
+interface ResultCardProps {
+  title: string;
+  content: string;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [dailyData, setDailyData] = useState<DailyData>({
     weight: "",
     bloodPressure: "",
@@ -42,10 +68,8 @@ export default function DashboardPage() {
   const [aiAnalysis, setAiAnalysis] = useState<AiResult | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Récupération du token
   const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("token") : null);
 
-  // Chargement du profil
   useEffect(() => {
     async function fetchProfile() {
       const token = getToken();
@@ -60,15 +84,13 @@ export default function DashboardPage() {
       setLoading(false);
     }
     fetchProfile();
-  }, []);
+  }, [router]);
 
-  // Gestion input
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setDailyData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Sauvegarde quotidienne et génération de notifications
   const saveDailyData = async () => {
     const token = getToken();
     if (!token) return alert("Utilisateur non authentifié");
@@ -82,17 +104,9 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error("Erreur sauvegarde");
 
       alert("Données quotidiennes enregistrées !");
-      setDailyData({
-        weight: "",
-        bloodPressure: "",
-        heartRate: "",
-        sleep: "",
-        activity: "",
-        description: "",
-      });
+      setDailyData({ weight: "", bloodPressure: "", heartRate: "", sleep: "", activity: "", description: "" });
       setAiAnalysis(null);
 
-      // Générer notifications locales selon les valeurs
       const newNotifications: Notification[] = [];
       const bp = parseFloat(dailyData.bloodPressure);
       const weight = parseFloat(dailyData.weight);
@@ -111,7 +125,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Analyse IA
   const analyzeWithAI = async () => {
     if (!dailyData.description.trim()) return alert("Veuillez saisir une description à analyser.");
     setAnalyzing(true);
@@ -123,19 +136,17 @@ export default function DashboardPage() {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Erreur IA");
-
       setAiAnalysis(parseAIResponse(json.analysis));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erreur IA", err);
-      alert("Erreur lors de l'analyse IA : " + (err.message || String(err)));
+      alert("Erreur lors de l'analyse IA : " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setAnalyzing(false);
     }
   };
 
-  // Parser réponse IA
   const parseAIResponse = (text: string): AiResult => {
-    const sections: any = { hypotheses: "", urgency: "", causes: "", advice: "", alerts: "" };
+    const sections: AiResult = { hypotheses: "", urgency: "", causes: "", advice: "", alerts: "" };
     const regex = /1\.\s*([\s\S]*?)\s*2\.\s*([\s\S]*?)\s*3\.\s*([\s\S]*?)\s*4\.\s*([\s\S]*?)\s*5\.\s*([\s\S]*)/m;
     const match = text.match(regex);
     if (match) {
@@ -147,24 +158,22 @@ export default function DashboardPage() {
     } else {
       sections.hypotheses = text;
     }
-    return sections as AiResult;
+    return sections;
   };
 
   if (loading) return <p className="text-center text-gray-500 p-10">Chargement...</p>;
 
   return (
     <div className="space-y-8 p-6 bg-gradient-to-r from-green-100 via-green-50 to-green-100 min-h-screen">
-      {/* Objectifs */}
       <section>
         <h2 className="text-2xl font-bold mb-4 text-green-800">Objectifs</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card title="Poids cible" value={profile.targetWeight ? `${profile.targetWeight} kg` : "—"} icon={<Scale size={28} />} />
-          <Card title="Sommeil cible" value={profile.sleep ? `${profile.sleep} h` : "—"} icon={<Moon size={28} />} />
-          <Card title="Activité cible" value={profile.activity ? `${profile.activity} min` : "—"} icon={<Activity size={28} />} />
+          <Card title="Poids cible" value={profile?.targetWeight ? `${profile.targetWeight} kg` : "—"} icon={<Scale size={28} />} />
+          <Card title="Sommeil cible" value={profile?.sleep ? `${profile.sleep} h` : "—"} icon={<Moon size={28} />} />
+          <Card title="Activité cible" value={profile?.activity ? `${profile.activity} min` : "—"} icon={<Activity size={28} />} />
         </div>
       </section>
 
-      {/* Données quotidiennes */}
       <section>
         <h2 className="text-2xl font-bold mb-4 text-green-800">Vos données quotidiennes</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -200,21 +209,19 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Résultat IA */}
       {aiAnalysis && (
         <section className="mt-8">
           <h2 className="text-2xl font-bold mb-4 text-blue-800">Analyse IA</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ResultCard title="Hypothèses possibles" content={aiAnalysis.hypotheses} />
-            <ResultCard title="Niveau d’urgence" content={aiAnalysis.urgency} />
+            <ResultCard title="Niveau d&apos;urgence" content={aiAnalysis.urgency} />
             <ResultCard title="Causes fréquentes" content={aiAnalysis.causes} />
             <ResultCard title="Conseils pratiques" content={aiAnalysis.advice} />
-            <ResultCard title="Signaux d’alerte" content={aiAnalysis.alerts} />
+            <ResultCard title="Signaux d&apos;alerte" content={aiAnalysis.alerts} />
           </div>
         </section>
       )}
 
-      {/* Notifications */}
       <section className="mt-8">
         <h2 className="text-2xl font-bold mb-4 text-red-600 flex items-center gap-2">
           <Bell size={24} /> Notifications
@@ -235,8 +242,7 @@ export default function DashboardPage() {
   );
 }
 
-// Components
-function Card({ title, value, icon }: any) {
+function Card({ title, value, icon }: CardProps) {
   return (
     <div className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4 border-l-4 border-green-500">
       <div className="text-green-600">{icon}</div>
@@ -248,7 +254,7 @@ function Card({ title, value, icon }: any) {
   );
 }
 
-function InputCard({ title, name, value, onChange, icon }: any) {
+function InputCard({ title, name, value, onChange, icon }: InputCardProps) {
   return (
     <div className="bg-white shadow-md rounded-xl p-6 flex flex-col gap-3 border-l-4 border-green-500">
       <div className="flex items-center gap-3">
@@ -266,7 +272,7 @@ function InputCard({ title, name, value, onChange, icon }: any) {
   );
 }
 
-function ResultCard({ title, content }: any) {
+function ResultCard({ title, content }: ResultCardProps) {
   return (
     <div className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-blue-500">
       <h3 className="font-semibold text-lg mb-2 text-blue-700">{title}</h3>

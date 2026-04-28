@@ -1,4 +1,5 @@
 import { connectToDatabase } from "@/lib/mongodb";
+import mongoose from "mongoose";
 
 export async function POST(req: Request) {
   try {
@@ -7,8 +8,9 @@ export async function POST(req: Request) {
     if (!userId || !type || !message)
       return new Response(JSON.stringify({ success: false, error: "Données manquantes" }), { status: 400 });
 
-    const { db } = await connectToDatabase();
-    await db.collection("notifications").insertOne({
+    await connectToDatabase();
+    const db = mongoose.connection.db;
+    await db!.collection("notifications").insertOne({
       userId,
       type,
       message,
@@ -16,8 +18,8 @@ export async function POST(req: Request) {
     });
 
     return new Response(JSON.stringify({ success: true }));
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
-    return new Response(JSON.stringify({ success: false, error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ success: false, error: err instanceof Error ? err.message : "Erreur" }), { status: 500 });
   }
 }

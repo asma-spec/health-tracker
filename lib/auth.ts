@@ -1,5 +1,8 @@
-// lib/auth.ts
 import jwt from "jsonwebtoken";
+
+interface JwtPayload {
+  userId: string;
+}
 
 export function getUserFromToken(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -10,9 +13,9 @@ export function getUserFromToken(req: Request) {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
-    return decoded.userId; // doit exister dans ton JWT
-  } catch (error) {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    return decoded.userId;
+  } catch {
     return null;
   }
 }
