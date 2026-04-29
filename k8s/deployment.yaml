@@ -13,11 +13,19 @@ spec:
       labels:
         app: health-tracker
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: health-tracker
-          image: asmmaa/health-tracker:latest
+          image: asmmaa/health-tracker:v1.0.0
           ports:
             - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
           env:
             - name: GROQ_API_KEY
               valueFrom:
