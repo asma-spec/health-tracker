@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: health-tracker-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: health-tracker
+      rules:
+        - alert: HealthTrackerDown
+          expr: up{job="health-tracker"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Health Tracker est down"
+            description: "L'application Health Tracker est inaccessible depuis 1 minute"
