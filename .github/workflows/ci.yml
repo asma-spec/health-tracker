@@ -23,17 +23,7 @@ jobs:
 
       - name: Lint
         run: npm run lint
-      - name: Scan dependencies
-        run: npm audit --audit-level=high
-        continue-on-error: true
 
-      - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/health-tracker:latest'
-          exit-code: '1'
-          severity: 'CRITICAL'
-          continue-on-error: true
       - name: Run tests
         run: npm test -- --watchAll=false
 
@@ -49,6 +39,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Scan dependencies
+        run: npm audit --audit-level=high
+        continue-on-error: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -69,3 +63,11 @@ jobs:
             GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
             MONGODB_URI=${{ secrets.MONGODB_URI }}
             JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/health-tracker:latest'
+          exit-code: '1'
+          severity: 'CRITICAL'
+          continue-on-error: true
