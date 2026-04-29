@@ -120,7 +120,7 @@ export default function HistoryPage() {
         ) : (
           <div className="space-y-4">
             {history
-              .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+              .toSorted((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
               .map((entry) => (
                 <div key={entry._id} className="bg-white shadow-lg rounded-xl p-6 border-l-4 border-green-500">
                   <div className="flex justify-between items-center mb-2">
